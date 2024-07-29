@@ -1,0 +1,114 @@
+from datetime import datetime, timedelta
+
+class Item:
+    def __init__(self, title, author, category, item_type):
+        self.title = title
+        self.author = author
+        self.category = category
+        self.item_type = item_type
+        self.checked_out = False
+        self.due_date = None
+
+    def __str__(self):
+        return f"{self.item_type}: {self.title} by {self.author} ({self.category})"
+
+class Library:
+    def __init__(self):
+        self.items = []
+        self.fines_per_day = 0.50
+
+    def add_item(self, item):
+        self.items.append(item)
+        print(f"Added {item}")
+
+    def checkout_item(self, title):
+        item = self._find_item(title)
+        if item and not item.checked_out:
+            item.checked_out = True
+            item.due_date = datetime.now() + timedelta(days=14)
+            print(f"{title} checked out. Due date is {item.due_date.strftime('%Y-%m-%d')}.")
+        elif item:
+            print(f"{title} is already checked out.")
+        else:
+            print(f"{title} not found.")
+
+    def return_item(self, title):
+        item = self._find_item(title)
+        if item and item.checked_out:
+            item.checked_out = False
+            overdue_days = (datetime.now() - item.due_date).days
+            fine = 0
+            if overdue_days > 0:
+                fine = overdue_days * self.fines_per_day
+                print(f"{title} returned late. Overdue fine: ${fine:.2f}.")
+            else:
+                print(f"{title} returned on time.")
+            item.due_date = None
+            return fine
+        elif item:
+            print(f"{title} was not checked out.")
+        else:
+            print(f"{title} not found.")
+
+    def search_items(self, **kwargs):
+        results = self.items
+        for key, value in kwargs.items():
+            if key in ['title', 'author', 'category']:
+                results = [item for item in results if getattr(item, key).lower() == value.lower()]
+        
+        if results:
+            print("Search results:")
+            for item in results:
+                print(item)
+        else:
+            print("No items found.")
+
+    def _find_item(self, title):
+        for item in self.items:
+            if item.title.lower() == title.lower():
+                return item
+        return None
+
+def main():
+    library = Library()
+    
+    while True:
+        print("\nLibrary Management System")
+        print("1. Add Item")
+        print("2. Checkout Item")
+        print("3. Return Item")
+        print("4. Search Items")
+        print("5. Exit")
+        
+        choice = input("Enter your choice: ")
+
+        if choice == '1':
+            title = input("Enter title: ")
+            author = input("Enter author: ")
+            category = input("Enter category: ")
+            item_type = input("Enter type (Book/Magazine/DVD): ")
+            item = Item(title, author, category, item_type)
+            library.add_item(item)
+
+        elif choice == '2':
+            title = input("Enter title to checkout: ")
+            library.checkout_item(title)
+
+        elif choice == '3':
+            title = input("Enter title to return: ")
+            library.return_item(title)
+
+        elif choice == '4':
+            search_type = input("Search by (title/author/category): ")
+            search_value = input(f"Enter {search_type}: ")
+            library.search_items(**{search_type: search_value})
+
+        elif choice == '5':
+            print("Exiting system.")
+            break
+
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
